@@ -1,0 +1,15 @@
+# Claude
+.claude/
+.agents/
+skills-lock.json
+
+# Node
+node_modules/
+dist/
+
+# Reports
+*.html
+!fixtures/
+
+# OS
+.DS_Store
