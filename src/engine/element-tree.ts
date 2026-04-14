@@ -16,6 +16,7 @@ export interface ScannedElement {
   }
   textContent?: string
   isInteractive: boolean
+  hasEventHandler?: boolean
   location: {
     file?: string
     line?: number
