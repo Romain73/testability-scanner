@@ -13,14 +13,25 @@ Both modes run the same rules engine and produce the same HTML report.
 
 ## Installation
 
+The package is not yet published to npm. Install it locally by cloning the repo:
+
 ```bash
-npm install -g testability-scanner
+git clone https://github.com/Romain73/testability-scanner.git
+cd testability-scanner
+npm install
+npm link
 ```
 
-Or run without installing:
+`npm link` registers the CLI globally on your machine. After that, `testability-scanner` is available as a command in any project:
 
 ```bash
-npx testability-scanner ./src
+testability-scanner ./src
+```
+
+To unlink later:
+
+```bash
+npm unlink -g testability-scanner
 ```
 
 ## Usage
@@ -44,11 +55,11 @@ testability-scanner --url https://myapp.com
 
 ### Options
 
-| Flag | Default | Description |
-|---|---|---|
-| `--url <url>` | — | URL to scan (URL mode) |
-| `--output <file>` | `testability-report.html` | Path for the HTML report |
-| `--threshold <n>` | `0` | Minimum score — exits with code `1` if below |
+| Flag              | Default                   | Description                                  |
+| ----------------- | ------------------------- | -------------------------------------------- |
+| `--url <url>`     | —                         | URL to scan (URL mode)                       |
+| `--output <file>` | `testability-report.html` | Path for the HTML report                     |
+| `--threshold <n>` | `0`                       | Minimum score — exits with code `1` if below |
 
 ### CI integration
 
@@ -69,15 +80,15 @@ Example GitHub Actions step:
 
 ## Rules
 
-| Rule | Severity | Flags |
-|---|---|---|
-| `missing-test-id` | error | Interactive element with no `data-testid`, `data-cy`, or `data-test` |
-| `missing-aria-label` | error | Interactive element with no accessible name |
-| `missing-form-label` | error | `<input>` with no label, `aria-label`, or placeholder |
-| `unlabelled-image-button` | error | `<button>` or `<a>` with no text or `aria-label` |
-| `duplicate-test-id` | error | Multiple elements sharing the same `data-testid` |
-| `text-only-locator` | warning | Interactive element identifiable only by its text content |
-| `generic-role` | warning | `<div>` or `<span>` with no `role` attribute |
+| Rule                      | Severity | Flags                                                                |
+| ------------------------- | -------- | -------------------------------------------------------------------- |
+| `missing-test-id`         | error    | Interactive element with no `data-testid`, `data-cy`, or `data-test` |
+| `missing-aria-label`      | error    | Interactive element with no accessible name                          |
+| `missing-form-label`      | error    | `<input>` with no label, `aria-label`, or placeholder                |
+| `unlabelled-image-button` | error    | `<button>` or `<a>` with no text or `aria-label`                     |
+| `duplicate-test-id`       | error    | Multiple elements sharing the same `data-testid`                     |
+| `text-only-locator`       | warning  | Interactive element identifiable only by its text content            |
+| `generic-role`            | warning  | `<div>` or `<span>` with no `role` attribute                         |
 
 ## Scoring
 
@@ -85,11 +96,11 @@ Example GitHub Actions step:
 score = clamp(100 − (errors × 5 + warnings × 2), 0, 100)
 ```
 
-| Score | Status |
-|---|---|
-| ≥ 80 | Passing |
+| Score | Status          |
+| ----- | --------------- |
+| ≥ 80  | Passing         |
 | 50–79 | Needs attention |
-| < 50 | Critical |
+| < 50  | Critical        |
 
 ## Report
 

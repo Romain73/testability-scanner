@@ -24,6 +24,8 @@ function getAttrValue(attr: t.JSXAttribute): string | undefined {
     if (t.isTemplateLiteral(expr) && expr.quasis.length === 1) {
       return expr.quasis[0].value.cooked ?? undefined
     }
+    // Dynamic expression (ternary, logical, variable, etc.) — attribute is present but runtime-determined
+    if (!t.isJSXEmptyExpression(expr)) return '[dynamic]'
   }
   return undefined
 }
@@ -40,23 +42,45 @@ function getTextContent(node: t.JSXElement): string {
   for (const child of node.children) {
     if (t.isJSXText(child)) {
       parts.push(child.value)
-    } else if (t.isJSXExpressionContainer(child) && t.isStringLiteral(child.expression)) {
-      parts.push(child.expression.value)
+    } else if (t.isJSXExpressionContainer(child)) {
+      const expr = child.expression
+      if (t.isStringLiteral(expr)) {
+        parts.push(expr.value)
+      } else if (!t.isJSXEmptyExpression(expr)) {
+        // Dynamic expression (ternary, logical, variable, etc.) — treat as having text content
+        parts.push('[dynamic]')
+      }
+    } else if (t.isJSXElement(child)) {
+      // Recurse into nested elements (e.g. <span>text</span> inside a <a> or <button>)
+      const nested = getTextContent(child)
+      if (nested) parts.push(nested)
     }
   }
   return parts.join('').replace(/\s+/g, ' ').trim()
 }
+
+const EVENT_HANDLER_PROPS = new Set([
+  'onClick', 'onKeyDown', 'onKeyUp', 'onKeyPress',
+  'onMouseDown', 'onMouseUp', 'onPointerDown', 'onPointerUp',
+  'onFocus', 'onBlur', 'onChange',
+])
 
 function buildElement(node: t.JSXElement, file: string): ScannedElement {
   const opening = node.openingElement
   const tag = getTagName(opening)
   const attributes: ScannedElement['attributes'] = {}
   let role: string | undefined
+  let hasEventHandler = false
 
   for (const attr of opening.attributes) {
     if (!t.isJSXAttribute(attr)) continue
     const name = t.isJSXIdentifier(attr.name) ? attr.name.name : attr.name.namespace.name + ':' + attr.name.name.name
     const value = getAttrValue(attr)
+
+    if (EVENT_HANDLER_PROPS.has(name)) {
+      hasEventHandler = true
+      continue
+    }
 
     switch (name) {
       case 'data-testid':
@@ -101,6 +125,7 @@ function buildElement(node: t.JSXElement, file: string): ScannedElement {
     attributes,
     textContent: textContent || undefined,
     isInteractive: false,
+    hasEventHandler,
     location: {
       file,
       line: opening.loc?.start.line,
