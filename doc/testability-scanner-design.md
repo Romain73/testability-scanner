@@ -10,6 +10,7 @@
 `testability-scanner` is a Node.js CLI tool that audits a web application's testability score. It flags missing selectors, unstable locators, and automation blind spots before they become flaky tests.
 
 The tool operates in two modes:
+
 - **Source mode** — statically analyzes React JSX/TSX files via AST parsing
 - **URL mode** — loads a live URL in a headless browser and inspects the rendered DOM
 
@@ -63,6 +64,7 @@ testability-scanner ./src --threshold 80
 ```
 
 **Exit codes:**
+
 - `0` — scan completed, score at or above threshold (default threshold: 0)
 - `1` — score below threshold, or unrecoverable error
 
@@ -81,14 +83,15 @@ interface ScannedElement {
     name?: string
     ariaLabel?: string
     ariaLabelledBy?: string
-    dataTestId?: string  // normalized from data-testid, data-cy, or data-test (whichever is present)
+    dataTestId?: string // normalized from data-testid, data-cy, or data-test (whichever is present)
     placeholder?: string
     type?: string
     href?: string
     [key: string]: string | undefined
   }
   textContent?: string
-  isInteractive: boolean  // true for: button, input, select, textarea, a, or any element with role="button|link|checkbox|radio|tab|menuitem|option"
+  isInteractive: boolean // true for: button, input, select, textarea, a, or any element with role="button|link|checkbox|radio|tab|menuitem|option"
+  hasEventHandler?: boolean // true if element has onClick, onKeyDown, onChange, etc.
   location: {
     // Source mode
     file?: string
@@ -123,15 +126,15 @@ interface Finding {
 
 ### Initial Ruleset
 
-| Rule ID | Severity | Description |
-|---|---|---|
-| `missing-test-id` | error | Interactive element has no `data-testid` (or `data-cy`, `data-test`) |
-| `missing-aria-label` | error | Interactive element has no accessible name — no `aria-label`, `aria-labelledby`, `placeholder`, `<label>`, or visible text |
-| `text-only-locator` | warning | Interactive element is only identifiable by its text content (fragile if copy changes) |
-| `generic-role` | warning | Interactive element uses a non-semantic tag (`div`, `span`) with no explicit `role` |
-| `duplicate-test-id` | error | Two or more elements share the same `data-testid` value |
-| `missing-form-label` | error | `<input>` has no associated `<label>`, `placeholder`, or `aria-label` |
-| `unlabelled-image-button` | error | `<button>` or `<a>` contains only an image with no `alt` text or `aria-label` |
+| Rule ID                   | Severity | Description                                                                                                                |
+| ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `missing-test-id`         | error    | Interactive element has no `data-testid` (or `data-cy`, `data-test`)                                                       |
+| `missing-aria-label`      | error    | Interactive element has no accessible name — no `aria-label`, `aria-labelledby`, `placeholder`, `<label>`, or visible text |
+| `text-only-locator`       | warning  | Interactive element is only identifiable by its text content (fragile if copy changes)                                     |
+| `generic-role`            | warning  | `<div>` or `<span>` with an event handler but no `role` attribute (layout divs without handlers are ignored)               |
+| `duplicate-test-id`       | error    | Two or more elements share the same `data-testid` value                                                                    |
+| `missing-form-label`      | error    | `<input>` has no associated `<label>`, `placeholder`, or `aria-label`                                                      |
+| `unlabelled-image-button` | error    | `<button>` or `<a>` contains only an image with no `alt` text or `aria-label`                                              |
 
 Rules live in `engine/rules/` as individual files. Adding a new rule requires only creating a new file and registering it in an index — no changes to the engine or analyzers.
 
@@ -173,13 +176,13 @@ A single self-contained `.html` file with inline CSS and JS (no external depende
 
 ## Dependencies
 
-| Package | Purpose |
-|---|---|
-| `@babel/parser` | Parse JSX/TSX source files into AST |
-| `@babel/traverse` | Walk AST nodes |
-| `@babel/types` | AST node type helpers |
-| `playwright` | Headless browser for URL mode |
-| `commander` | CLI argument parsing |
+| Package           | Purpose                             |
+| ----------------- | ----------------------------------- |
+| `@babel/parser`   | Parse JSX/TSX source files into AST |
+| `@babel/traverse` | Walk AST nodes                      |
+| `@babel/types`    | AST node type helpers               |
+| `playwright`      | Headless browser for URL mode       |
+| `commander`       | CLI argument parsing                |
 
 No runtime dependencies beyond these. The HTML report is self-contained.
 
